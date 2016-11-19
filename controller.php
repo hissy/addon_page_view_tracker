@@ -3,6 +3,7 @@ namespace Concrete\Package\PageViewTracker;
 
 use Concrete\Core\Package\Package;
 use Concrete\Core\Backup\ContentImporter;
+use Concrete\Core\Page\Page;
 use Database;
 use Events;
 use PageViewTracker\Entity\Hit;
@@ -22,7 +23,7 @@ class Controller extends Package
     /**
      * @var string Package version.
      */
-    protected $pkgVersion = '0.2';
+    protected $pkgVersion = '0.2.1';
 
     /**
      * @var boolean Remove \Src from package namespace.
@@ -62,15 +63,30 @@ class Controller extends Package
         $ci = new ContentImporter();
         $ci->importContentFile($pkg->getPackagePath() . '/config/install.xml');
     }
-    
+
+    public function uninstall()
+    {
+        $dbm = $this->getDatabaseStructureManager();
+
+        if ($dbm->hasEntities()) {
+            $dbm->uninstallDatabase();
+        }
+
+        parent::uninstall();
+    }
+
     public function on_start()
     {
         $db = Database::connection();
         $em = $db->getEntityManager();
         Events::addListener('on_page_view', function ($event) use ($em) {
-            $hit = new Hit($event->getPageObject(), $event->getUserObject());
-            $em->persist($hit);
-            $em->flush();
+            /** @var Page $c */
+            $c = $event->getPageObject();
+            if (!$c->isAdminArea()) {
+                $hit = new Hit($event->getPageObject(), $event->getUserObject());
+                $em->persist($hit);
+                $em->flush();
+            }
         });
     }
 }
