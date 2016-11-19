@@ -28,13 +28,13 @@ class Hit
 
     /**
      * @var integer Page ID.
-     * @Column(type="integer")
+     * @Column(type="integer", options={"unsigned":true})
      */
     private $cID;
 
     /**
      * @var integer User ID.
-     * @Column(type="integer")
+     * @Column(type="integer", options={"unsigned":true})
      */
     private $uID;
 
@@ -96,7 +96,8 @@ class Hit
      */
     public function prePersist()
     {
-        $this->uID = ($this->uID) ? $this->uID : 0;
+        $this->cID = ($this->cID > 0) ? $this->cID : 0;
+        $this->uID = ($this->uID > 0) ? $this->uID : 0;
         $this->createdAt = new \DateTime();
     }
 }
